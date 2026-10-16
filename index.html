@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#2b1055">
+<meta name="theme-color" content="#0d1b2a">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:,">
 <title>ISOLA ZERO – Battle Royale 3D</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
+<script type="importmap">{"imports":{"three":"./three.module.min.js","three/addons/":"./jsm/"}}</script>
 </head><body>
 <canvas id="c"></canvas>
 <div id="hurt"></div><div id="stormfx"></div>
@@ -13,7 +15,8 @@
   <div id="top"><span id="alive">👤 16</span><span id="kills">💀 0</span><span id="stormtxt"></span></div>
   <div id="feed"></div>
   <div id="msg"></div>
-  <div id="cross">+</div>
+  <div id="dmg"></div>
+  <div id="cross"><i></i><i></i><i></i><i></i></div>
   <div id="bars"><div class="bar"><div id="shb"></div><span id="sht">0</span></div><div class="bar"><div id="hpb"></div><span id="hpt">100</span></div></div>
   <div id="mats">🪵 <b id="matn">0</b></div>
   <div id="buildinfo"></div>
@@ -22,6 +25,7 @@
   <div id="touch">
     <div id="joy"><div id="knob"></div></div>
     <button id="bFire">🎯<small>SPARA</small></button>
+    <button id="bFire2">🎯</button>
     <button id="bJump">⤒<small>SALTA</small></button>
     <button id="bBuild">🧱<small>COSTRUISCI</small></button>
     <button id="bEdit">🔄<small>MODIFICA</small></button>
@@ -32,9 +36,11 @@
   <h1>ISOLA ZERO</h1>
   <p class="sub">Lanciati dal bus volante. Raccogli, costruisci, sopravvivi.<br>Sedici giocatori, un'isola, un solo vincitore.</p>
   <button id="play">GIOCA</button>
+  <div id="qual">Grafica: <span data-q="basso">Basso</span><span data-q="medio">Medio</span><span data-q="alto">Alto</span></div>
   <p id="stats"></p>
   <p class="help" id="help"></p>
 </div>
 <div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button></div>
-<script type="module" src="main.js"></script>
+<div id="rotate"><div class="phone"></div><h2>Ruota il telefono</h2><p>ISOLA ZERO si gioca in orizzontale</p><button id="fs">Schermo intero</button></div>
+<script type="module" src="main.js?v=2"></script>
 </body></html>
