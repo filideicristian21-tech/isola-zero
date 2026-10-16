@@ -13,6 +13,7 @@ const $ = id => document.getElementById(id);
 // ---------- multigiocatore: stato ----------
 const QP = new URLSearchParams(location.search);
 const ROOM = ((QP.get('stanza') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24)) || null;
+const IS_HOST = !!ROOM && sessionStorage.getItem('iz_host') === ROOM;
 const NET = { on: false, host: false, client: false, started: false, mySlot: 0, pl: [], peer: null, conns: [], hostConn: null, gameOver: false };
 const hum = e => !!(e && (e.isPlayer || e.human));
 if (ROOM) { $('menu').classList.add('hidden'); $('lobby').classList.remove('hidden'); $('lbStatus').textContent = 'Caricamento dell\'isola…'; }
@@ -89,11 +90,11 @@ const CHARS = charGl.map(gl => {
   return { scene: sc, s: 1.8 / h, y0: -bb.min.y * 1.8 / h, clips };
 });
 const HEROES = [
-  { n: 'Lampo Ferretti', ruolo: 'Il veloce', d: 'Spaccone simpatico, non sta mai fermo. «Ero già qui. Tu da dove arrivi?»', sp: 'Scia: 3 s al doppio della velocità', m: 1, hp: 85, spd: 1.15, w: 'p', col: 0xffe14d, cd: 20,
+  { n: 'Lampo Ferretti', ruolo: 'Il veloce', d: 'Spaccone simpatico, non sta mai fermo. «Ero già qui. Tu da dove arrivi?»', sp: 'Scia: 3 s al doppio della velocità', m: 1, hp: 90, spd: 1.15, w: 'p', col: 0xffe14d, cd: 20,
     tint: { White: 0xf5e03a, Orange: 0x3a3d42, Grey: 0xff7a1a, Brown: 0xff7a1a, Hair_Blond: 0x3b2a1a } },
-  { n: 'Nonna Rocca', ruolo: 'La tank', d: 'Burbera ma protettiva, non indietreggia mai. «Dietro di me, tesoro. Ci penso io.»', sp: 'Muro di Casa: muro di pietra istantaneo e +10% salute', m: 2, hp: 130, spd: 0.9, w: 's', col: 0x2f6b3a, cd: 30,
+  { n: 'Nonna Rocca', ruolo: 'La tank', d: 'Burbera ma protettiva, non indietreggia mai. «Dietro di me, tesoro. Ci penso io.»', sp: 'Muro di Casa: muro di pietra istantaneo e +20% salute', m: 2, hp: 130, spd: 0.9, w: 's', col: 0x2f6b3a, cd: 25,
     tint: { Swat: 0x2f5a34, Black: 0x8a1f1f, Grey: 0xc7c2b5, Hair_Brown: 0xd9d9d9, Brown: 0xb02020 } },
-  { n: 'Ago Morelli', ruolo: 'La cecchina', d: 'Calma, silenziosa, ironica. Studia l\'isola dall\'alto. «Un respiro. Un colpo.»', sp: 'Occhio d\'Ago: 4 s di mira perfetta e danni doppi', m: 0, hp: 100, spd: 1.0, w: 'a', col: 0x5a3a8a, cd: 35,
+  { n: 'Ago Morelli', ruolo: 'La cecchina', d: 'Calma, silenziosa, ironica. Studia l\'isola dall\'alto. «Un respiro. Un colpo.»', sp: 'Occhio d\'Ago: 4 s di mira perfetta e danni x1,6', m: 0, hp: 100, spd: 1.0, w: 'a', col: 0x5a3a8a, cd: 35,
     tint: { Swat: 0x26244a, Swat_Black: 0x4a2a6a, Visor: 0xffb000 } },
 ];
 for (const H of HEROES) CHARS[H.m].scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (H.tint[m.name] !== undefined) m.color.setHex(H.tint[m.name]); });
@@ -307,9 +308,16 @@ function hideRes(t) { if (t.kind === 'tree') setTree(t); else t.mesh.visible = f
 // ---------- weapons & loot ----------
 const WEAP = {
   p: { n: 'Pistola', ic: '🔫', dmg: 24, rate: .28, mag: 12, rel: 1.2, spread: .012, pel: 1, range: 90, len: .45, col: 0x333333, snd: [3200, .16, .9] },
-  a: { n: 'Fucile d\'assalto', ic: '🪖', dmg: 30, rate: .13, mag: 30, rel: 1.8, spread: .022, pel: 1, range: 150, len: 1.0, col: 0x2d3a2d, snd: [2400, .14, 1] },
+  a: { n: 'Fucile d\'assalto', ic: '🪖', dmg: 24, rate: .13, mag: 25, rel: 1.8, spread: .022, pel: 1, range: 150, len: 1.0, col: 0x2d3a2d, snd: [2400, .14, 1] },
   s: { n: 'Fucile a pompa', ic: '💥', dmg: 12, rate: .95, mag: 5, rel: 2.3, spread: .085, pel: 8, range: 35, len: .8, col: 0x5a3a1a, snd: [1300, .38, 1.4] },
 };
+const DIFFS = {
+  facile: { sk: [.45, .75], hp: .8, sh: 0, dmg: .45, rate: .30, err: 2.0, react: 1.8, v0: 10, v1: 25, rng: 40, wall: .2, maxT: 2, warn: true },
+  normale: { sk: [.6, 1.0], hp: 1, sh: 0, dmg: .6, rate: .18, err: 1.5, react: 1.3, v0: 12, v1: 32, rng: 60, wall: .4, maxT: 99, warn: false },
+  difficile: { sk: [.8, 1.2], hp: 1, sh: 25, dmg: .75, rate: .12, err: 1.25, react: 1.1, v0: 12, v1: 38, rng: 1e9, wall: .6, maxT: 99, warn: false },
+};
+let DIFF = localStorage.getItem('isolazero_diff'); if (!DIFFS[DIFF]) DIFF = 'normale';
+let DF = DIFFS[DIFF];
 const SLOT = { p: 0, a: 1, s: 2 }, TYPES = ['p', 'a', 's'];
 const RAR = ['Comune', 'Non comune', 'Raro', 'Epico', 'Leggendario'];
 const RARC = ['#b8b8b8', '#4ade80', '#38bdf8', '#c084fc', '#fbbf24'];
@@ -503,7 +511,7 @@ function useSuper() {
   if (superCd > 0) { say(`${H.sp.split(':')[0]} pronta tra ${Math.ceil(superCd)} s`); return; }
   superCd = H.cd;
   if (player.hero === 0) { player.boostT = 3; say('⚡ Scia! «Ero già qui. Tu da dove arrivi?»'); }
-  else if (player.hero === 1) { freeWall(player, 400); player.hp = Math.min(player.maxHp, player.hp + player.maxHp * .1); say('🧱 Muro di Casa! «Dietro di me, tesoro.»'); }
+  else if (player.hero === 1) { freeWall(player, 400); player.hp = Math.min(player.maxHp, player.hp + player.maxHp * .2); say('🧱 Muro di Casa! «Dietro di me, tesoro.»'); }
   else { player.eyeT = 4; say('🎯 Occhio d\'Ago! «Un respiro. Un colpo.»'); }
 }
 const EVENTS = [
@@ -629,7 +637,7 @@ const _mz = new V3();
 function shoot(e, o, dir) {
   const w = e.weapons[e.cur]; if (!w || e.reload > 0 || e.fireCd > 0) return;
   if (w.mag <= 0) { startReload(e); return; }
-  const W = WEAP[w.wt]; w.mag--; const eye = e.eyeT > 0 ? 2 : 1; e.fireCd = W.rate + (e.isPlayer ? 0 : .12);
+  const W = WEAP[w.wt]; w.mag--; const eye = e.eyeT > 0 ? 1.6 : 1; e.fireCd = W.rate + (e.isPlayer ? 0 : DF.rate);
   const mult = 1 + w.rar * .08;
   const muzzle = e.p.flash.getWorldPosition(new V3());
   if (muzzle.distanceTo(e.pos) > 3) muzzle.set(e.pos.x, e.pos.y + 1.5, e.pos.z).addScaledVector(fwd(e.yaw), .9);
@@ -642,7 +650,7 @@ function shoot(e, o, dir) {
     const h = hitscan(o, d, W.range, e), end = o.clone().addScaledVector(d, h.t);
     if (i < 3) tracer(muzzle, end);
     if (i === 0 && NET.started && (e.isPlayer || (NET.host && !e.puppet))) netSend({ t: 'f', s: e.slot, a: [+muzzle.x.toFixed(2), +muzzle.y.toFixed(2), +muzzle.z.toFixed(2)], b: [+end.x.toFixed(2), +end.y.toFixed(2), +end.z.toFixed(2)], w: w.wt });
-    if (h.type === 'ent') { spark(end, 6, 0xff5533, 4); damage(h.obj, W.dmg * mult * eye * (h.head ? 1.5 : 1) * (e.isPlayer ? 1 : hum(h.obj) ? .75 : .55), e, h.head); }
+    if (h.type === 'ent') { spark(end, 6, 0xff5533, 4); damage(h.obj, W.dmg * mult * eye * (h.head ? 1.5 : 1) * (e.isPlayer ? 1 : hum(h.obj) ? DF.dmg : .55), e, h.head); }
     else if (h.type === 'piece') { spark(end, 5, 0xffcc77); hurtPiece(h.obj, W.dmg * mult); }
     else if (h.type) spark(end, i < 3 ? 6 : 2, h.type === 'ground' ? 0xd8c090 : 0xffe0a0);
   }
@@ -861,9 +869,10 @@ function botAI(b, dt) {
   }
   if (ai.t <= 0) {
     ai.t = .35 + rnd() * .4;
-    ai.enemy = null; let bd = (clock < 25 ? 12 : 38) * ai.skill;
-    for (const e of ents) if (e !== b && e.alive && e.state === 'ground') { const d = e.pos.distanceTo(b.pos); if (d < bd) { bd = d; ai.enemy = e; } }
-    if (ai.attacker && ai.attacker.alive && clock - ai.lastHit < 3) ai.enemy = ai.attacker;
+    ai.enemy = null; let bd = (clock < 25 ? DF.v0 : DF.v1) * ai.skill; const pT = ents.filter(o => o !== b && !o.isPlayer && !o.human && o.alive && o.ai.enemy && hum(o.ai.enemy)).length;
+    for (const e of ents) if (e !== b && e.alive && e.state === 'ground' && !(hum(e) && pT >= DF.maxT)) { const d = e.pos.distanceTo(b.pos); if (d < bd) { bd = d; ai.enemy = e; } }
+    if (ai.attacker && ai.attacker.alive && clock - ai.lastHit < 3 && !(hum(ai.attacker) && pT >= DF.maxT)) ai.enemy = ai.attacker;
+    if (ai.enemy !== ai.prevEn) { ai.prevEn = ai.enemy; ai.warned = false; }
     const sd = Math.hypot(b.pos.x - storm.nx, b.pos.z - storm.nz);
     const gun = hasGun(b);
     if (sd > storm.nr * .85 + 3 && (storm.mode === 'shrink' || storm.t < 15 || Math.hypot(b.pos.x - storm.x, b.pos.z - storm.z) > storm.r - 5)) ai.goal = randomLand(storm.nx, storm.nz, Math.max(2, storm.nr * .5)), ai.mode = 'storm';
@@ -886,15 +895,16 @@ function botAI(b, dt) {
     const fx = dx / d, fz = dz / d; ix = -fz * ai.strafe * .7; iz = fx * ai.strafe * .7;
     const want = b.cur === 2 ? 6 : 22; if (d > want) { ix += fx; iz += fz; } else if (d < want * .5) { ix -= fx * .5; iz -= fz * .5; }
     ai.aim += dt;
-    if (ai.aim > 1.1 / ai.skill) {
+    if (ai.aim > DF.react / ai.skill) {
       const w = b.weapons[b.cur];
       if (w && w.mag <= 0) startReload(b);
       const o = new V3(b.pos.x, b.pos.y + 1.5, b.pos.z), tgt = new V3(en.pos.x, en.pos.y + 1.2, en.pos.z), dir = tgt.sub(o).normalize();
-      const err = (.03 + d * .0012) / ai.skill * (hum(en) ? 1.25 : 1);
+      const err = (.03 + d * .0012) / ai.skill * (hum(en) ? DF.err : 1);
+      if (hum(en) && DF.warn && !ai.warned && b.fireCd <= 0 && b.weapons[b.cur]?.mag > 0) { ai.warned = true; dir.y += .25; dir.x += (rnd() < .5 ? -1 : 1) * .2; }
       dir.x += (rnd() - .5) * err * 2; dir.y += (rnd() - .5) * err * 2; dir.z += (rnd() - .5) * err * 2; dir.normalize();
-      if (hum(en) || d < 60) shoot(b, o, dir);
+      if (hum(en) ? d < DF.rng : d < 60) shoot(b, o, dir);
     }
-    if (clock - ai.lastHit < .4 && ai.buildCd <= 0 && b.mats >= COST && rnd() < .6) { build(b, 'wall'); ai.buildCd = rr(4, 8); ai.strafe *= -1; }
+    if (clock - ai.lastHit < .4 && ai.buildCd <= 0 && b.mats >= COST && rnd() < DF.wall) { build(b, 'wall'); ai.buildCd = rr(4, 8); ai.strafe *= -1; }
     if (rnd() < dt * .4) jump = true;
   } else {
     ai.aim = 0;
@@ -947,6 +957,7 @@ function startGame() {
   initAudio();
   stats.partite++; localStorage.setItem(SKEY, JSON.stringify(stats));
   for (const b of ents) if (!b.isPlayer) { const along = (b.ai.drop / BUSDUR) * 460 - 230; const x = busDir.x * along, z = busDir.z * along; b.ai.land = rnd() < .5 && houses.length ? (() => { const h = houses[(rnd() * houses.length) | 0]; return new V3(h.x + rr(-8, 8), 0, h.z + rr(-8, 8)); })() : randomLand(x, z, 45); }
+  for (const b of ents) if (!b.isPlayer && !b.human) { b.ai.skill = rr(DF.sk[0], DF.sk[1]); b.maxHp = Math.round(HEROES[b.hero].hp * DF.hp); b.hp = b.maxHp; b.sh = DF.sh; }
   nextCircle();
   say(isTouch ? 'Sei sul bus volante! Tocca SALTA per lanciarti' : 'Sei sul bus volante! Premi SPAZIO per lanciarti', 5);
 }
@@ -1006,7 +1017,24 @@ function applyHero() {
 $('play').addEventListener('click', () => { phase = 'select'; $('menu').classList.add('hidden'); $('sel').classList.remove('hidden'); setHero(heroSel); });
 document.querySelectorAll('.hcard').forEach(c => c.addEventListener('click', () => setHero(+c.dataset.h)));
 $('selBack').addEventListener('click', () => { phase = 'menu'; $('sel').classList.add('hidden'); $('menu').classList.remove('hidden'); });
-$('go').addEventListener('click', () => { goLandscape(); $('sel').classList.add('hidden'); applyHero(); startGame(); });
+$('go').addEventListener('click', () => { goLandscape(); $('sel').classList.add('hidden'); applyHero(); if (!localStorage.getItem('isolazero_tut')) $('tutIntro').classList.remove('hidden'); else startGame(); });
+const TUT = [
+  ['Muoviti', 'Muoviti con W A S D. Tieni premuto Shift per scattare, Spazio per saltare.', 'Trascina il joystick a sinistra per muoverti. Tocca ⤒ SALTA per saltare.'],
+  ['Mira e spara', 'Mira con il mouse e clicca per sparare. Premi R per ricaricare.', 'Trascina sul lato destro per mirare e tocca 🎯 SPARA. Tocca ↻ RICARICA per ricaricare.'],
+  ['Raccogli', 'Passa sopra armi e oggetti a terra per raccoglierli. Cambia arma con 1, 2 e 3.', 'Passa sopra armi e oggetti a terra per raccoglierli. Tocca le caselle in basso per cambiare arma.'],
+  ['Costruisci', 'Premi Q per costruire, E per cambiare pezzo, clicca per piazzarlo. Premi F per tornare al piccone. C crea subito un muro di copertura.', 'Tocca 🧱 COSTRUISCI, poi 🔄 MODIFICA per cambiare pezzo e 🎯 SPARA per piazzarlo. Tocca 🛡️ COPERTURA per un muro rapido.'],
+  ['Usa la super del tuo eroe', 'Premi G per usare la super del tuo eroe. Funziona solo a terra, poi si ricarica.', 'Tocca ⚡ SUPER per usare il potere del tuo eroe. Funziona solo a terra, poi si ricarica.'],
+  ['Scappa dalla tempesta', 'La tempesta si stringe sull\'isola. Resta dentro il cerchio sicuro, fuori perdi vita!'],
+];
+const TUTH = ['Scia: per 3 secondi corri al doppio della velocità. Torna pronta dopo 20 s.', 'Muro di Casa: un muro di pietra all\'istante e +20% di salute. Torna pronta dopo 25 s.', 'Occhio d\'Ago: per 4 secondi mira perfetta e danni x1,6. Torna pronta dopo 35 s.'];
+let tutI = 0;
+function tutShow() { const s = TUT[tutI]; $('tutN').textContent = `Passo ${tutI + 1} di 6`; $('tutT').textContent = s[0]; $('tutP').textContent = (isTouch && s[2]) || s[1]; $('tutH').textContent = tutI === 4 ? HEROES[heroSel].n + ' · ' + TUTH[heroSel] : ''; }
+function tutEnd() { localStorage.setItem('isolazero_tut', '1'); for (const id of ['tutIntro', 'tut', 'tutDone']) $(id).classList.add('hidden'); if (phase !== 'bus' && phase !== 'play') startGame(); }
+$('tutGo').addEventListener('click', () => { tutI = 0; tutShow(); $('tutIntro').classList.add('hidden'); $('tut').classList.remove('hidden'); });
+for (const id of ['tutNo', 'tutIntroX', 'tutSkip', 'tutStart']) $(id).addEventListener('click', tutEnd);
+$('tutNext').addEventListener('click', () => { if (tutI < 5) { tutI++; tutShow(); } else { $('tut').classList.add('hidden'); $('tutDone').classList.remove('hidden'); } });
+$('tutBtn').addEventListener('click', () => { localStorage.removeItem('isolazero_tut'); $('play').click(); });
+document.querySelectorAll('#diff span').forEach(s => { s.classList.toggle('on', s.dataset.d === DIFF); s.addEventListener('click', () => { DIFF = s.dataset.d; DF = DIFFS[DIFF]; localStorage.setItem('isolazero_diff', DIFF); document.querySelectorAll('#diff span').forEach(x => x.classList.toggle('on', x === s)); }); });
 $('fs').addEventListener('click', goLandscape);
 $('again').addEventListener('click', () => { if (NET.on) location.href = location.pathname; else location.reload(); });
 let lastScore = { k: 0, p: 16 };
@@ -1266,7 +1294,14 @@ $('codeGo').addEventListener('click', joinCode); $('codeIn').addEventListener('k
 $('howBtn').addEventListener('click', () => $('how').classList.remove('hidden')); $('howClose').addEventListener('click', () => $('how').classList.add('hidden'));
 // consenso prima di collegarsi
 $('cOk').addEventListener('change', () => { $('cGo').disabled = !$('cOk').checked; });
-$('cGo').addEventListener('click', () => { if (!$('cOk').checked) return; $('consent').classList.add('hidden'); netInit(); });
+$('cGo').addEventListener('click', () => { if (!$('cOk').checked) return; $('consent').classList.add('hidden'); $('lbConnect').style.display = 'none'; netInit(); });
+$('lbConnect').addEventListener('click', () => { if (!navigator.onLine) { $('lbStatus').textContent = 'Serve internet per giocare con gli amici'; return; } $('consent').classList.remove('hidden'); });
+$('cX').addEventListener('click', () => $('cNo').click());
+$('lbX').addEventListener('click', () => $('lbLeave').click());
+$('howX').addEventListener('click', () => $('how').classList.add('hidden'));
+$('credX').addEventListener('click', () => $('cred').classList.add('hidden'));
+$('rotX').addEventListener('click', () => document.body.classList.add('rotOff'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') for (const id of ['consent', 'how', 'cred']) if (!$(id).classList.contains('hidden')) { $(id === 'consent' ? 'cX' : id + 'X').click(); break; } });
 $('cNo').addEventListener('click', () => { sessionStorage.removeItem('iz_host'); location.href = location.pathname; });
 document.querySelectorAll('#lbHeroes button').forEach(b => { b.textContent = HEROES[+b.dataset.h].n + ' · ' + HEROES[+b.dataset.h].ruolo; b.addEventListener('click', () => { heroSel = +b.dataset.h; localStorage.setItem('isolazero_hero3', heroSel); sendMe(); lobbyRender(); }); });
 $('lbWa').addEventListener('click', () => window.open('https://wa.me/?text=' + encodeURIComponent(inviteText()), '_blank'));
@@ -1382,6 +1417,14 @@ for (const k in mcache) if (mcache[k].envMapIntensity === 1) mcache[k].envMapInt
 buildPreview();
 document.querySelectorAll('.hcard').forEach(c => { const H = HEROES[+c.dataset.h]; c.querySelector('b').textContent = H.n; c.querySelector('small').textContent = H.ruolo; });
 $('play').disabled = false; $('play').textContent = 'Gioca da solo';
-if (ROOM) { $('consent').classList.remove('hidden'); $('lbStatus').textContent = 'Leggi l\'avviso e conferma per entrare.'; }
+if (ROOM) { if (IS_HOST) { $('lbCode').textContent = 'Stanza ' + ROOM; $('lbNick').value = myNick; $('lbConnect').style.display = ''; $('lbStatus').textContent = 'Invita gli amici con WhatsApp, poi premi «Apri la stanza» per farli entrare.'; } else { $('consent').classList.remove('hidden'); $('lbStatus').textContent = 'Leggi l\'avviso e conferma per entrare.'; } }
 requestAnimationFrame(loop);
-window.__game = { player, ents, storm, Q, HEROES, NET, pickups, pieces, shootAt(s) { const o = ents[s], a = new V3(player.pos.x, player.pos.y + 1.6, player.pos.z), d = new V3(o.pos.x, o.pos.y + 1.2, o.pos.z).sub(a).normalize(); player.fireCd = 0; player.reload = 0; shoot(player, a.addScaledVector(d, .9), d); return player.weapons[player.cur]?.mag; }, tp(x, z, yaw) { player.pos.set(x, groundAt(x, z, 99), z); player.yaw = yaw ?? player.yaw; player.vel.set(0, 0, 0); player.state = 'ground'; player.onGround = true; player.p.g.visible = true; }, aimAt(s) { const o = ents[s]; player.yaw = Math.atan2(o.pos.x - player.pos.x, o.pos.z - player.pos.z); player.pitch = 0; }, dbgPlayer() { busT = BUSDUR + 3; phase = 'play'; bus.visible = false; }, dbgLand() { busT = BUSDUR + 3; phase = 'play'; for (const e of ents) { const h = houses[(rnd() * houses.length) | 0], x = h.x + rr(-9, 9), z = h.z + 7 + rr(0, 4); e.state = 'ground'; e.pos.set(x, groundAt(x, z, 99), z); e.vel.set(0, 0, 0); e.p.g.visible = true; e.onGround = true; } }, setHero: i => setHero(i), get pv() { return pv; }, get phase() { return phase; }, set fire(v) { firing = v; } };
+window.__game = { player, ents, storm, Q, HEROES, NET, pickups, pieces, shootAt(s) { const o = ents[s], a = new V3(player.pos.x, player.pos.y + 1.6, player.pos.z), d = new V3(o.pos.x, o.pos.y + 1.2, o.pos.z).sub(a).normalize(); player.fireCd = 0; player.reload = 0; shoot(player, a.addScaledVector(d, .9), d); return player.weapons[player.cur]?.mag; }, tp(x, z, yaw) { player.pos.set(x, groundAt(x, z, 99), z); player.yaw = yaw ?? player.yaw; player.vel.set(0, 0, 0); player.state = 'ground'; player.onGround = true; player.p.g.visible = true; }, aimAt(s) { const o = ents[s]; player.yaw = Math.atan2(o.pos.x - player.pos.x, o.pos.z - player.pos.z); player.pitch = 0; }, dbgPlayer() { busT = BUSDUR + 3; phase = 'play'; bus.visible = false; }, setHero: i => setHero(i), get pv() { return pv; }, get phase() { return phase; }, set fire(v) { firing = v; } };
+
+// ---------- offline ----------
+function netUI() { const off = !navigator.onLine; $('mpBtn').disabled = off; $('codeGo').disabled = off; $('codeIn').disabled = off; $('offMsg').classList.toggle('hidden', !off); }
+addEventListener('online', netUI); addEventListener('offline', netUI); netUI();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.t === 'cached' && e.data.ok) $('offBadge').classList.remove('hidden'); });
+  navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(r => { const ask = () => r.active && r.active.postMessage('status'); ask(); setTimeout(ask, 3000); }).catch(() => { });
+}

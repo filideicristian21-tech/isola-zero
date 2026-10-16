@@ -1,0 +1,13 @@
+const CACHE = 'isolazero-v8';
+const FILES = ["./","icon-192.png","icon-512.png","index.html","main.js","manifest.webmanifest","peerjs.min.js","privacy-mp.html","style.css","three.module.min.js","jsm/postprocessing/EffectComposer.js","jsm/postprocessing/RenderPass.js","jsm/postprocessing/UnrealBloomPass.js","jsm/postprocessing/OutputPass.js","jsm/postprocessing/ShaderPass.js","jsm/postprocessing/MaskPass.js","jsm/postprocessing/Pass.js","jsm/shaders/CopyShader.js","jsm/shaders/LuminosityHighPassShader.js","jsm/shaders/OutputShader.js","jsm/shaders/FXAAShader.js","jsm/objects/Sky.js","jsm/loaders/GLTFLoader.js","jsm/loaders/RGBELoader.js","jsm/utils/SkeletonUtils.js","jsm/utils/BufferGeometryUtils.js","assets/tex/grass_col.jpg","assets/tex/grass_nor.jpg","assets/tex/grass_rgh.jpg","assets/tex/ground_col.jpg","assets/tex/ground_nor.jpg","assets/tex/ground_rgh.jpg","assets/tex/rock_col.jpg","assets/tex/rock_nor.jpg","assets/tex/rock_rgh.jpg","assets/tex/bark_col.jpg","assets/tex/bark_nor.jpg","assets/tex/bark_rgh.jpg","assets/tex/wood_col.jpg","assets/tex/wood_nor.jpg","assets/tex/wood_rgh.jpg","assets/hdri/kloofendal_1k.hdr","assets/chars/swat.glb","assets/chars/casual.glb","assets/chars/soldier.glb","assets/pine.glb","assets/rock.glb"];
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('isolazero-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('fetch', e => {
+  const r = e.request; if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
+  e.respondWith(caches.open(CACHE).then(async c => {
+    const hit = await c.match(r, { ignoreSearch: true }) || (r.mode === 'navigate' ? await c.match('./') : null);
+    if (hit) return hit;
+    const res = await fetch(r); if (res.ok) c.put(r, res.clone()); return res;
+  }));
+});
+self.addEventListener('message', async e => { if (e.data === 'status') { const c = await caches.open(CACHE); const ks = await c.keys(); e.source.postMessage({ t: 'cached', ok: ks.length >= FILES.length }); } });

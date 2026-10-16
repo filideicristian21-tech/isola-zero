@@ -3,9 +3,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0d1b2a">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="icon" href="data:,">
+<link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
 <title>ISOLA ZERO – Battle Royale 3D</title>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=8b">
 <script type="importmap">{"imports":{"three":"./three.module.min.js","three/addons/":"./jsm/"}}</script>
 </head><body>
 <canvas id="c"></canvas>
@@ -44,10 +44,12 @@
   <button id="play">Gioca da solo</button>
   <button id="mpBtn" class="mp">👥 Crea partita con amici</button>
   <div id="codeBox"><input id="codeIn" maxlength="80" placeholder="Codice stanza" autocomplete="off" autocapitalize="characters"><button id="codeGo" class="small">Entra con codice</button></div><small id="codeErr"></small>
+  <div id="diff">Difficoltà: <span data-d="facile">Facile</span><span data-d="normale">Normale</span><span data-d="difficile">Difficile</span></div>
   <div id="qual">Grafica: <span data-q="basso">Basso</span><span data-q="medio">Medio</span><span data-q="alto">Alto</span></div>
-  <p id="stats"></p>
+  <small id="offMsg" class="hidden">📵 Serve internet per giocare con gli amici</small>
+  <p id="stats"></p><span id="offBadge" class="hidden">✅ Disponibile offline</span>
   <p class="help" id="help"></p>
-  <button id="howBtn" class="small">Come si gioca</button> <button id="credBtn" class="small">Crediti</button>
+  <button id="howBtn" class="small">Come si gioca</button> <button id="credBtn" class="small">Crediti</button> <button id="tutBtn" class="small">Tutorial</button>
 </div>
 <div id="sel" class="hidden">
   <div id="selTop"><button id="selBack">‹ Indietro</button><h2>SCEGLI IL TUO EROE</h2></div>
@@ -59,7 +61,7 @@
     <button id="go">GIOCA</button></div>
   <div id="cards"><div class="hcard" data-h="0"><b></b><small></small></div><div class="hcard" data-h="1"><b></b><small></small></div><div class="hcard" data-h="2"><b></b><small></small></div></div>
 </div>
-<div id="lobby" class="screen hidden">
+<div id="lobby" class="screen hidden"><button class="xbtn" id="lbX" aria-label="Chiudi">✕</button>
   <h2>👥 Partita con amici</h2>
   <div id="lbCode"></div>
   <p id="lbStatus">Connessione…</p>
@@ -67,11 +69,12 @@
   <label class="lbl">Il tuo nome <input id="lbNick" maxlength="16" placeholder="Il tuo nome" autocomplete="off"></label><button id="lbNickRnd" class="small">🎲 Nome a caso</button><small id="lbNickErr"></small>
   <div id="lbHeroes"><button data-h="0"></button><button data-h="1"></button><button data-h="2"></button></div>
   <ul id="lbList"></ul>
+  <button id="lbConnect" style="display:none">🔌 Apri la stanza</button>
   <button id="lbStart" style="display:none">INIZIA</button>
   <button id="lbNew" class="small" style="display:none">Crea la mia partita</button>
   <button id="lbLeave" class="small">Esci</button>
 </div>
-<div id="consent" class="screen hidden"><div class="box">
+<div id="consent" class="screen hidden"><button class="xbtn" id="cX" aria-label="Chiudi">✕</button><div class="box">
   <h2>Prima di entrare</h2>
   <p>Giocando online, il tuo <b>indirizzo IP</b> è visibile agli altri giocatori della stanza e al servizio di collegamento <b>PeerJS</b>. Non salviamo dati: niente registrazioni, niente statistiche. Non c'è chat: solo segnali già pronti.</p>
   <p>Gioca solo con persone di cui ti fidi. Consigliato dai <b>14 anni</b> in su.</p>
@@ -79,7 +82,7 @@
   <label class="chk"><input type="checkbox" id="cOk"> Ho letto e ho capito</label>
   <button id="cGo" disabled>Ho capito, entra</button><button id="cNo" class="small">No, torna al menu</button>
 </div></div>
-<div id="how" class="screen hidden"><div class="box howbox">
+<div id="how" class="screen hidden"><button class="xbtn" id="howX" aria-label="Chiudi">✕</button><div class="box howbox">
   <h2>Come si gioca con gli amici (fino a 4)</h2>
   <ol>
     <li><b>Apri ISOLA ZERO</b> dal browser, su computer o telefono. Non serve installare niente.</li>
@@ -102,14 +105,17 @@
   <button id="howClose">Chiudi</button>
 </div></div>
 <div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button><button id="share" class="small">📣 Sfida un amico</button></div>
-<div id="cred" class="screen hidden"><h2>Crediti</h2><div class="credl">
+<div id="cred" class="screen hidden"><button class="xbtn" id="credX" aria-label="Chiudi">✕</button><h2>Crediti</h2><div class="credl">
 <p>Personaggi, pini e rocce: <b>Quaternius</b> (CC0), via <a href="https://poly.pizza/u/Quaternius" target="_blank" rel="noopener">Poly Pizza</a></p>
 <p>Modello di Nonna Rocca: <a href="https://poly.pizza/m/oAArCNHjFB" target="_blank" rel="noopener">"Soldier" by Quaternius, via Poly Pizza</a> — <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a> (colori modificati)</p>
 <p>Texture PBR: <a href="https://ambientcg.com" target="_blank" rel="noopener">ambientCG</a> (CC0) · Cielo HDRI: <a href="https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky" target="_blank" rel="noopener">Poly Haven</a> (CC0)</p>
 <p>Rete: <a href="https://peerjs.com" target="_blank" rel="noopener">PeerJS</a> (MIT)</p>
 <p>Motore 3D: <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> (MIT)</p></div>
 <button id="credClose">Chiudi</button></div>
-<div id="rotate"><div class="phone"></div><h2>Ruota il telefono</h2><p>ISOLA ZERO si gioca in orizzontale</p><button id="fs">Schermo intero</button></div>
+<div id="tutIntro" class="screen hidden"><button class="xbtn" id="tutIntroX" aria-label="Chiudi">✕</button><div class="box"><p>Prima volta sull'isola? Ti mostriamo i comandi in 6 passi.</p><button id="tutGo">Inizia il tutorial</button> <button id="tutNo" class="small">Salta</button></div></div>
+<div id="tut" class="screen hidden"><button id="tutSkip" class="small">Salta tutorial</button><div class="box"><small id="tutN"></small><h2 id="tutT"></h2><p id="tutP"></p><p id="tutH" style="color:#ffd23f"></p><button id="tutNext">Avanti ›</button></div></div>
+<div id="tutDone" class="screen hidden"><div class="box"><h2>Sei pronto. Sopravvivi fino alla fine!</h2><button id="tutStart">GIOCA</button></div></div>
+<div id="rotate"><button class="xbtn" id="rotX" aria-label="Chiudi">✕</button><div class="phone"></div><h2>Ruota il telefono</h2><p>ISOLA ZERO si gioca in orizzontale</p><button id="fs">Schermo intero</button></div>
 <script src="peerjs.min.js?v=1.5.5"></script>
-<script type="module" src="main.js?v=6"></script>
+<script type="module" src="main.js?v=8"></script>
 </body></html>
