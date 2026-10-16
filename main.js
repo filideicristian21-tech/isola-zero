@@ -12,7 +12,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 const $ = id => document.getElementById(id);
 // ---------- multigiocatore: stato ----------
 const QP = new URLSearchParams(location.search);
-const ROOM = ((QP.get('stanza') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)) || null;
+const ROOM = ((QP.get('stanza') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24)) || null;
 const NET = { on: false, host: false, client: false, started: false, mySlot: 0, pl: [], peer: null, conns: [], hostConn: null, gameOver: false };
 const hum = e => !!(e && (e.isPlayer || e.human));
 if (ROOM) { $('menu').classList.add('hidden'); $('lobby').classList.remove('hidden'); $('lbStatus').textContent = 'Caricamento dell\'isola…'; }
@@ -753,7 +753,8 @@ function say(t, dur = 2.2) { $('msg').textContent = t; msgT = dur; }
 function hitmark() { $('cross').classList.add('hit'); hitT = .12; }
 const feedList = [];
 function feed(t) { feedList.unshift({ t, x: 6 }); if (feedList.length > 4) feedList.pop(); renderFeed(); }
-function renderFeed() { $('feed').innerHTML = feedList.map(f => `<div>${f.t.replace(/^Tu /, '<b style="color:#ffe14d">Tu</b> ')}</div>`).join(''); }
+const mkEl = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+function renderFeed() { const F = $('feed'); F.replaceChildren(...feedList.map(f => { const d = mkEl('div'); if (/^Tu /.test(f.t)) { const b = mkEl('b', '', 'Tu'); b.style.color = '#ffe14d'; d.append(b, ' ' + f.t.slice(3)); } else d.textContent = f.t; return d; })); }
 
 // minimap
 const mapC = $('map'), mctx = mapC.getContext('2d'), MS = 128 / (2 * R + 40);
@@ -779,7 +780,7 @@ function updateHUD() {
   $('matn').textContent = player.mats;
   $('alive').textContent = '👤 ' + ents.filter(e => e.alive).length;
   $('kills').textContent = '💀 ' + player.kills;
-  if (NET.started) $('friends').innerHTML = ents.filter(hum).map(e => `<div class="${e.alive ? '' : 'dead'}">${e.alive ? '❤️' : '💀'} <b>${esc(e.isPlayer ? 'Tu' : e.name)}</b> <small>${HEROES[e.hero].n.split(' ')[0]}${e.alive ? ' · ' + Math.ceil(e.hp) : ''}</small></div>`).join('');
+  if (NET.started) $('friends').replaceChildren(...ents.filter(hum).map(e => { const d = mkEl('div', e.alive ? '' : 'dead', (e.alive ? '❤️ ' : '💀 ')); d.append(mkEl('b', '', e.isPlayer ? 'Tu' : (hideNames ? 'Amico ' + (e.slot + 1) : e.name)), ' ', mkEl('small', '', HEROES[e.hero].n.split(' ')[0] + (e.alive ? ' · ' + Math.ceil(e.hp) : ''))); return d; }));
   $('stormtxt').textContent = storm.i >= PH.length ? '🌀 Ultimo cerchio' : storm.mode === 'wait' ? `🌀 Tempesta tra ${Math.ceil(storm.t)}s` : `🌀 Si restringe! ${Math.ceil(storm.t)}s`;
   slotEls.forEach(el => {
     const s = +el.dataset.s; el.classList.toggle('sel', s === player.cur);
@@ -1025,8 +1026,17 @@ const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:1
 const STC = ['bus', 'fall', 'glide', 'ground'], MODES = ['wait', 'shrink'];
 const r2 = v => Math.round(v * 100) / 100;
 const roomLink = () => location.origin + location.pathname + '?stanza=' + ROOM;
-const inviteText = () => `🏝️ Gioca con me a ISOLA ZERO! Entra nella mia partita (stanza ${ROOM}): ${roomLink()}`;
-let myNick = (localStorage.getItem('isolazero_nick') || '').slice(0, 14);
+const inviteText = () => `🏝️ Ti sfido su ISOLA ZERO! Siamo fino a 4 nella stessa stanza, si gioca dal browser.\n👉 Entra qui: ${roomLink()}`;
+const BAD = ['cazz', 'stronz', 'merd', 'puttan', 'troia', 'vaffanc', 'coglion', 'minchi', 'frocio', 'froci', 'ricchion', 'negro', 'negri', 'terron', 'zingar', 'mongol', 'ritardat', 'porcodi', 'porcamadon', 'diocan', 'fica', 'figa', 'culo', 'pompin', 'segaiol', 'bastard', 'fuck', 'shit', 'bitch', 'cunt', 'dick', 'cock', 'pussy', 'whore', 'slut', 'nigg', 'fag', 'retard', 'rape', 'nazi', 'hitler', 'porn', 'sex', 'kill'];
+const randNick = () => 'Giocatore-' + (1000 + ((crypto.getRandomValues(new Uint16Array(1))[0]) % 9000));
+function cleanNick(n, fb) {
+  n = String(n ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  const low = n.toLowerCase(), flat = low.replace(/[^a-z]/g, '').replace(/0/g, 'o');
+  const ok = /^[A-Za-z0-9_-]{3,16}$/.test(n) && !/(https?|www|\.com|@)/.test(low) && !/\d{6,}/.test(n) && !BAD.some(w => flat.includes(w) || low.replace(/[^a-z0-9]/g, '').replace(/[1!]/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/0/g, 'o').includes(w));
+  return ok ? n : (fb || randNick());
+}
+let myNick = cleanNick(localStorage.getItem('isolazero_nick') || '');
+let hideNames = false;
 function netSend(m, except) {
   if (!NET.on) return;
   if (NET.client) { if (NET.hostConn && NET.hostConn.open) try { NET.hostConn.send(m); } catch (e) { } return; }
@@ -1070,8 +1080,8 @@ function updNames() {
   for (const e of ents) {
     if (!e.human) continue;
     const el = nameEls[k] || (nameEls[k] = Object.assign(document.createElement('div'), { className: 'nm' })); if (!el.parentNode) $('names').appendChild(el); k++;
-    if (el.textContent !== e.name) el.textContent = e.name;
-    const vis = e.alive && e.state !== 'bus' && e.p.g.visible && phase !== 'menu';
+    const nn = hideNames ? 'Amico ' + (e.slot + 1) : e.name; if (el.textContent !== nn) el.textContent = nn;
+    const vis = !hideNames && e.alive && e.state !== 'bus' && e.p.g.visible && phase !== 'menu';
     _pj.set(e.pos.x, e.pos.y + 2.35, e.pos.z).project(camera);
     const d = e.pos.distanceTo(camera.position);
     if (!vis || _pj.z > 1 || d > 220) { el.style.display = 'none'; continue; }
@@ -1084,6 +1094,7 @@ function setEntHero(e, h, color) {
 }
 const FRIENDC = [0xff6b1a, 0x29b6ff, 0x7cff4f, 0xff4fd8];
 function beginMP(pl, my) {
+  pl = pl.slice(0, 4); if (my >= pl.length) return;
   NET.started = true; NET.mySlot = my; NET.pl = pl;
   heroSel = pl[my].h; applyHero();
   const B = ents.filter(e => !e.isPlayer), order = []; let bi = 0;
@@ -1093,12 +1104,32 @@ function beginMP(pl, my) {
   }
   while (bi < B.length) { const e = B[bi++]; if (NET.client) e.puppet = true; order.push(e); }
   ents.length = 0; ents.push(...order); ents.forEach((e, i) => e.slot = i);
-  $('lobby').classList.add('hidden'); $('friends').classList.remove('hidden');
+  $('lobby').classList.add('hidden'); $('friends').classList.remove('hidden'); $('sigs').classList.remove('hidden');
   goLandscape(); startGame();
   if (pl.length > 1) say(`Partita con ${pl.filter((p, i) => i !== my).map(p => p.n).join(', ')}! ` + (isTouch ? 'Tocca SALTA per lanciarti' : 'SPAZIO per lanciarti'), 5);
 }
 function slotName(s) { return s === NET.mySlot ? 'Tu' : ents[s] ? ents[s].name : '?'; }
+const isN = (v, a, b) => typeof v === 'number' && isFinite(v) && v >= a && v <= b, isI = (v, a, b) => isN(v, a, b) && Math.floor(v) === v, isS = (v, n) => typeof v === 'string' && v.length <= n, isB = v => typeof v === 'boolean';
+const W = 400, arrN = (a, n, lo, hi) => Array.isArray(a) && a.length === n && a.every(v => isN(v, lo, hi));
+const plOk = pl => Array.isArray(pl) && pl.length >= 1 && pl.length <= 4 && pl.every(p => p && isS(p.n, 16) && isI(p.h, 0, 2));
+const SCHEMA = {
+  hi: m => isS(m.n, 40) && isI(m.h, 0, 2), lb: m => plOk(m.pl) && isI(m.you, 1, 3) && m.you < m.pl.length, no: m => isS(m.why, 200), go: m => plOk(m.pl) && isI(m.you, 1, 3) && m.you < m.pl.length, ping: () => true,
+  S: m => Array.isArray(m.e) && m.e.length === 16 && m.e.every(a => Array.isArray(a) && a.length === 10 && isN(a[0], -W, W) && isN(a[1], -50, 300) && isN(a[2], -W, W) && isN(a[3], -1e4, 1e4) && isI(a[4], 0, 3) && isN(a[5], -1e3, 1e3) && isN(a[6], -1e3, 1e3) && isI(a[7], 0, 1) && isI(a[8], -1, 14) && isI(a[9], 0, 99)) && Array.isArray(m.st) && m.st.length === 10 && m.st.every(v => isN(v, -1e3, 1e3)),
+  k: m => isI(m.v, 0, 15) && isI(m.s, -1, 15) && isI(m.r, 0, 1) && isI(m.p, 1, 16), rs: m => isI(m.v, 0, 15) && isN(m.x, -W, W) && isN(m.y, -50, 300) && isN(m.z, -W, W),
+  win: m => isI(m.v, 0, 15), ev: m => isI(m.k, 0, EVENTS.length - 1), left: m => isI(m.v, 0, 15),
+  pk: m => isI(m.id, 0, 1e6) && ['w', 'ammo', 'shield', 'med'].includes(m.k) && (m.wt === undefined || TYPES.includes(m.wt)) && (m.rar === undefined || isI(m.rar, 0, 4)) && (m.k !== 'w' || (TYPES.includes(m.wt) && isI(m.rar, 0, 4))) && (m.k !== 'ammo' || TYPES.includes(m.wt)) && isN(m.x, -W, W) && isN(m.z, -W, W) && isN(m.y, -50, 300),
+  tk: m => isI(m.id, 0, 1e6) && isS(m.k, 8), r: m => isI(m.i, 0, resources.length - 1),
+  b: m => isS(m.id, 24) && PIECES.includes(m.k) && arrN(m.c, 2, -W, W) && arrN(m.d, 2, -1, 1) && isN(m.y0, -50, 300) && isB(m.ax) && isN(m.hp, 1, 500),
+  pd: m => isS(m.id, 24), f: m => isI(m.s, 0, 15) && arrN(m.a, 3, -W, W) && arrN(m.b, 3, -W, W) && TYPES.includes(m.w),
+  s: m => isN(m.x, -W, W) && isN(m.y, -50, 300) && isN(m.z, -W, W) && isN(m.yaw, -1e4, 1e4) && isI(m.st, 0, 3) && isI(m.w, -1, 14),
+  h: m => isI(m.v, 0, 15) && isN(m.d, 0, 300) && isB(m.hd), sig: m => isI(m.k, 0, SIGNALS.length - 1) && (m.s === undefined || isI(m.s, 0, 15)),
+};
+const RATE = 90; // messaggi/secondo max per peer
 function handle(m, conn) {
+  if (!m || typeof m !== 'object' || Array.isArray(m) || !Object.hasOwn(SCHEMA, m.t) || !SCHEMA[m.t](m)) return;
+  if (conn) { const now = performance.now(); if (now - (conn.rw || 0) > 1000) { conn.rw = now; conn.rc = 0; } if (++conn.rc > RATE) return; }
+  if (NET.client && conn === null && ['hi', 's', 'h'].includes(m.t)) return;
+  if (m.pl) m.pl = m.pl.map((p, i) => ({ n: cleanNick(p.n, 'Giocatore-' + (i + 1)), h: p.h }));
   if (conn) conn.seen = performance.now(); else NET.seen = performance.now();
   const e = m.v !== undefined ? ents[m.v] : null;
   switch (m.t) {
@@ -1106,11 +1137,12 @@ function handle(m, conn) {
     case 'hi': if (!NET.host) return; {
       if (NET.started) { conn.send({ t: 'no', why: 'La partita è già iniziata. Chiedi al tuo amico di creare una nuova stanza.' }); setTimeout(() => conn.close(), 500); return; }
       if (!conn.ok && NET.conns.filter(c => c.ok).length >= 3) { conn.send({ t: 'no', why: 'La stanza è piena (massimo 4 giocatori).' }); setTimeout(() => conn.close(), 500); return; }
-      conn.ok = true; conn.nick = String(m.n || 'Amico').replace(/[<>]/g, '').slice(0, 14) || 'Amico'; conn.hero = Math.min(2, Math.max(0, m.h | 0)); lobbyRender(); return; }
+      conn.ok = true; conn.nick = cleanNick(m.n, 'Giocatore-' + (NET.conns.indexOf(conn) + 2)); conn.hero = Math.min(2, Math.max(0, m.h | 0)); lobbyRender(); return; }
     case 'lb': NET.pl = m.pl; NET.mySlot = m.you; lobbyRender(); return;
     case 'no': $('lbStatus').textContent = '⛔ ' + m.why; NET.refused = true; return;
     case 'go': if (NET.client && !NET.started) beginMP(m.pl, m.you); return;
     case 'ping': return;
+    case 'sig': { if (NET.host && conn) m.s = conn.slot; if (m.s === undefined || !ents[m.s]) return; const x = ents[m.s]; showSig(x, m.k); if (NET.host) netSend(m, conn); return; }
     // ---- partita (client riceve)
     case 'S': if (!NET.client || !NET.started) return;
       m.e.forEach((a, i) => {
@@ -1150,18 +1182,26 @@ function handle(m, conn) {
       conn.dmgW.push([now, d]); damage(e, d, src, !!m.hd); } return;
   }
 }
-function lobbyPlayers() { return [{ n: myNick || 'Capo', h: heroSel }, ...NET.conns.filter(c => c.ok).map(c => ({ n: c.nick, h: c.hero }))]; }
+const SIGNALS = ['📍 Qui!', '⚠️ Attento!', '🤝 GG'];
+function showSig(e, k) { const who = e.isPlayer ? 'Tu' : (hideNames ? 'Amico ' + (e.slot + 1) : e.name); feed(`${who}: ${SIGNALS[k]}`); if (!e.isPlayer) say(`${who}: ${SIGNALS[k]}`, 2); }
+let sigCd = 0;
+function sendSig(k) { if (!NET.started || performance.now() < sigCd) return; sigCd = performance.now() + 1500; showSig(player, k); netSend({ t: 'sig', k, s: NET.mySlot }); }
+function kick(i) { const c = NET.conns.filter(c => c.ok)[i - 1]; if (!c) return; try { c.send({ t: 'no', why: 'Il capo stanza ti ha tolto dalla stanza.' }); } catch (e) { } setTimeout(() => { try { c.close(); } catch (e) { } }, 300); dropConn(c, 'espulso'); }
+function lobbyPlayers() { return [{ n: myNick, h: heroSel }, ...NET.conns.filter(c => c.ok).slice(0, 3).map(c => ({ n: c.nick, h: c.hero }))]; }
 function lobbyRender() {
   let pl;
   if (NET.host) { pl = lobbyPlayers(); NET.pl = pl; NET.conns.filter(c => c.ok).forEach((c, i) => { try { c.send({ t: 'lb', pl, you: i + 1 }); } catch (e) { } }); }
   else pl = NET.pl || [];
-  $('lbList').innerHTML = pl.map((p, i) => `<li><span class="dot" style="background:#${FRIENDC[i].toString(16).padStart(6, '0')}"></span><b>${esc(p.n)}</b>${i === 0 ? ' 👑' : ''}${i === NET.mySlot ? ' (tu)' : ''} <small>${esc(HEROES[p.h].n)}</small></li>`).join('') + (pl.length < 4 ? `<li class="empty">${4 - pl.length} ${pl.length === 3 ? 'posto libero' : 'posti liberi'} · i bot riempiono il resto (16 in tutto)</li>` : '');
+  $('lbList').replaceChildren(...pl.map((p, i) => { const li = mkEl('li'), dot = mkEl('span', 'dot'); dot.style.background = '#' + FRIENDC[i].toString(16).padStart(6, '0');
+    li.append(dot, mkEl('b', '', p.n), (i === 0 ? ' 👑' : '') + (i === NET.mySlot ? ' (tu)' : ''), mkEl('small', '', HEROES[p.h].n));
+    if (NET.host && i > 0 && !NET.started) { const k = mkEl('button', 'kick', '✖ Espelli'); k.onclick = () => kick(i); li.append(k); } return li; }),
+    ...(pl.length < 4 ? [mkEl('li', 'empty', `${4 - pl.length} ${pl.length === 3 ? 'posto libero' : 'posti liberi'} · i bot riempiono il resto (16 in tutto)`)] : []));
   $('lbStart').style.display = NET.host ? '' : 'none';
   if (NET.host) $('lbStatus').textContent = pl.length > 1 ? `Pronti in ${pl.length}! Premi INIZIA quando ci siete tutti.` : 'Stanza pronta! Invita gli amici con il link.';
   else if (NET.hostConn && NET.hostConn.open && !NET.refused) $('lbStatus').textContent = '✅ Sei dentro! In attesa che il capo stanza prema INIZIA…';
   document.querySelectorAll('#lbHeroes button').forEach(b => b.classList.toggle('on', +b.dataset.h === heroSel));
 }
-function sendMe() { localStorage.setItem('isolazero_nick', myNick); if (NET.client) netSend({ t: 'hi', n: myNick || 'Amico', h: heroSel }); else lobbyRender(); }
+function sendMe() { localStorage.setItem('isolazero_nick', myNick); if (NET.client) netSend({ t: 'hi', n: myNick, h: heroSel }); else lobbyRender(); }
 function dropConn(c, why) {
   c.dropped = true; const i = NET.conns.indexOf(c); if (i >= 0) NET.conns.splice(i, 1);
   if (!NET.started) { lobbyRender(); return; }
@@ -1191,7 +1231,7 @@ function netInit() {
     NET.host = true; NET.client = false; $('lbStatus').textContent = 'Creo la stanza…';
     const peer = new Peer('isolazero-' + ROOM, { config: { iceServers: ICE }, debug: 0 }); NET.peer = peer;
     peer.on('open', () => { lobbyRender(); setInterval(() => { if (!NET.started) netSend({ t: 'ping' }); }, 2000); });
-    peer.on('connection', c => { if (NET.conns.length >= 8) { c.close(); return; } NET.conns.push(c); c.on('open', () => { }); wireConn(c); });
+    peer.on('connection', c => { if (NET.conns.length >= 6 || NET.started) { setTimeout(() => { try { c.close(); } catch (e) { } }, 800); if (NET.started) return; if (NET.conns.length >= 6) return; } NET.conns.push(c); c.on('open', () => { }); wireConn(c); });
     peer.on('error', err => {
       if (err.type === 'unavailable-id') { peer.destroy(); if (++tries < 4) { $('lbStatus').textContent = 'Riapro la stanza…'; setTimeout(asHost, 3000); } else { sessionStorage.removeItem('iz_host'); asClient(); } return; }
       if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error') $('lbStatus').textContent = '⚠️ Problema di rete con il server di collegamento. Riprova tra poco.';
@@ -1212,10 +1252,22 @@ function netInit() {
 }
 // UI lobby
 $('mpBtn').addEventListener('click', () => {
-  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const r = crypto.getRandomValues(new Uint8Array(5)); for (const b of r) c += A[b % A.length];
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const r = crypto.getRandomValues(new Uint8Array(16)); for (const b of r) c += A[b % A.length];
   sessionStorage.setItem('iz_host', c); location.href = location.pathname + '?stanza=' + c;
 });
-$('lbNick').addEventListener('input', () => { myNick = $('lbNick').value.replace(/[<>]/g, '').slice(0, 14); clearTimeout(window.__nk); window.__nk = setTimeout(sendMe, 400); });
+$('lbNick').addEventListener('input', () => { const v = $('lbNick').value.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 16); if (v !== $('lbNick').value) $('lbNick').value = v; const c = cleanNick(v, ''); $('lbNickErr').textContent = c ? '' : 'Nome non valido: 3–16 tra lettere, numeri, _ e -, niente parolacce.'; if (!c) return; myNick = c; clearTimeout(window.__nk); window.__nk = setTimeout(sendMe, 400); });
+$('lbNickRnd').addEventListener('click', () => { myNick = randNick(); $('lbNick').value = myNick; $('lbNickErr').textContent = ''; sendMe(); });
+document.querySelectorAll('#sigs button').forEach(b => { const f = e => { e.preventDefault(); e.stopPropagation(); sendSig(+b.dataset.k); }; b.addEventListener('touchstart', f, { passive: false }); b.addEventListener('click', f); });
+$('hideN').addEventListener('click', e => { e.stopPropagation(); hideNames = !hideNames; $('hideN').textContent = hideNames ? '👁️ Mostra nomi' : '🙈 Nascondi nomi'; });
+addEventListener('keydown', e => { if (NET.started && phase === 'play') { if (e.code === 'KeyZ') sendSig(0); if (e.code === 'KeyX') sendSig(1); if (e.code === 'KeyV') sendSig(2); } });
+// entra con codice
+function joinCode() { const c = $('codeIn').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); const m = $('codeIn').value.match(/stanza=([A-Za-z0-9]+)/); const code = m ? m[1].toUpperCase() : c; if (code.length < 5 || code.length > 24) { $('codeErr').textContent = 'Codice non valido'; return; } location.href = location.pathname + '?stanza=' + code; }
+$('codeGo').addEventListener('click', joinCode); $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') joinCode(); });
+$('howBtn').addEventListener('click', () => $('how').classList.remove('hidden')); $('howClose').addEventListener('click', () => $('how').classList.add('hidden'));
+// consenso prima di collegarsi
+$('cOk').addEventListener('change', () => { $('cGo').disabled = !$('cOk').checked; });
+$('cGo').addEventListener('click', () => { if (!$('cOk').checked) return; $('consent').classList.add('hidden'); netInit(); });
+$('cNo').addEventListener('click', () => { sessionStorage.removeItem('iz_host'); location.href = location.pathname; });
 document.querySelectorAll('#lbHeroes button').forEach(b => { b.textContent = HEROES[+b.dataset.h].n + ' · ' + HEROES[+b.dataset.h].ruolo; b.addEventListener('click', () => { heroSel = +b.dataset.h; localStorage.setItem('isolazero_hero3', heroSel); sendMe(); lobbyRender(); }); });
 $('lbWa').addEventListener('click', () => window.open('https://wa.me/?text=' + encodeURIComponent(inviteText()), '_blank'));
 $('lbCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(roomLink()); $('lbCopy').textContent = '✅ Link copiato!'; } catch (e) { prompt('Copia il link:', roomLink()); } setTimeout(() => $('lbCopy').textContent = '🔗 Copia link', 2000); });
@@ -1330,6 +1382,6 @@ for (const k in mcache) if (mcache[k].envMapIntensity === 1) mcache[k].envMapInt
 buildPreview();
 document.querySelectorAll('.hcard').forEach(c => { const H = HEROES[+c.dataset.h]; c.querySelector('b').textContent = H.n; c.querySelector('small').textContent = H.ruolo; });
 $('play').disabled = false; $('play').textContent = 'Gioca da solo';
-if (ROOM) netInit();
+if (ROOM) { $('consent').classList.remove('hidden'); $('lbStatus').textContent = 'Leggi l\'avviso e conferma per entrare.'; }
 requestAnimationFrame(loop);
 window.__game = { player, ents, storm, Q, HEROES, NET, pickups, pieces, shootAt(s) { const o = ents[s], a = new V3(player.pos.x, player.pos.y + 1.6, player.pos.z), d = new V3(o.pos.x, o.pos.y + 1.2, o.pos.z).sub(a).normalize(); player.fireCd = 0; player.reload = 0; shoot(player, a.addScaledVector(d, .9), d); return player.weapons[player.cur]?.mag; }, tp(x, z, yaw) { player.pos.set(x, groundAt(x, z, 99), z); player.yaw = yaw ?? player.yaw; player.vel.set(0, 0, 0); player.state = 'ground'; player.onGround = true; player.p.g.visible = true; }, aimAt(s) { const o = ents[s]; player.yaw = Math.atan2(o.pos.x - player.pos.x, o.pos.z - player.pos.z); player.pitch = 0; }, dbgPlayer() { busT = BUSDUR + 3; phase = 'play'; bus.visible = false; }, dbgLand() { busT = BUSDUR + 3; phase = 'play'; for (const e of ents) { const h = houses[(rnd() * houses.length) | 0], x = h.x + rr(-9, 9), z = h.z + 7 + rr(0, 4); e.state = 'ground'; e.pos.set(x, groundAt(x, z, 99), z); e.vel.set(0, 0, 0); e.p.g.visible = true; e.onGround = true; } }, setHero: i => setHero(i), get pv() { return pv; }, get phase() { return phase; }, set fire(v) { firing = v; } };

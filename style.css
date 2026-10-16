@@ -127,3 +127,17 @@ body.touch #bCover{display:flex;right:max(250px,calc(env(safe-area-inset-right) 
 #friends div{background:rgba(0,0,0,.35);border-radius:6px;padding:2px 7px;margin-bottom:3px}
 #friends div.dead{opacity:.55}
 #friends small{color:#bcd}
+#codeBox{display:flex;gap:6px;align-items:center;margin-top:10px}
+#codeIn{font-size:16px;padding:8px 10px;border-radius:10px;border:2px solid #7ee0ff;background:#0d1b2a;color:#fff;width:190px;text-transform:uppercase}
+#codeBox button{margin-top:0}
+#codeErr,#lbNickErr{color:#ff8a8a;min-height:14px}
+.screen .box{background:rgba(5,12,28,.95);border-radius:16px;padding:18px 22px;max-width:620px;color:#e8eef7;text-align:left;max-height:92vh;overflow-y:auto}
+.screen .box h2{color:#ffe14d;margin:0 0 8px}.screen .box h3{color:#7ee0ff;margin:12px 0 4px;font-size:16px}
+.screen .box a{color:#7ee0ff}.howbox li{margin:4px 0;font-size:14px}
+.chk{display:block;margin:10px 0;font-weight:700}.chk input{transform:scale(1.4);margin-right:8px}
+#cGo:disabled{opacity:.45;cursor:not-allowed}
+#consent,#how{z-index:30}
+#lbList button.kick{float:right;margin:0;font-size:12px;padding:3px 8px;background:#a33;color:#fff;box-shadow:none;font-style:normal}
+#sigs{position:absolute;left:8px;top:260px;display:flex;flex-direction:column;gap:4px;pointer-events:auto}
+#sigs button{font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;text-align:left}
+#lbNickRnd{margin-top:6px!important}
