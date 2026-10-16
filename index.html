@@ -5,7 +5,7 @@
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:,">
 <title>ISOLA ZERO – Battle Royale 3D</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=4">
 <script type="importmap">{"imports":{"three":"./three.module.min.js","three/addons/":"./jsm/"}}</script>
 </head><body>
 <canvas id="c"></canvas>
@@ -29,18 +29,38 @@
     <button id="bJump">⤒<small>SALTA</small></button>
     <button id="bBuild">🧱<small>COSTRUISCI</small></button>
     <button id="bEdit">🔄<small>MODIFICA</small></button>
+    <button id="bSuper">⚡<small>SUPER</small></button>
+    <button id="bCover">🛡️<small>COPERTURA</small></button>
     <button id="bReload">↻<small>RICARICA</small></button>
   </div>
 </div>
 <div id="menu" class="screen">
   <h1>ISOLA ZERO</h1>
-  <p class="sub">Lanciati dal bus volante. Raccogli, costruisci, sopravvivi.<br>Sedici giocatori, un'isola, un solo vincitore.</p>
+  <p class="sub">Un'isola. Cento strade. Zero seconde possibilità.</p>
+  <p id="chal"></p>
   <button id="play">GIOCA</button>
   <div id="qual">Grafica: <span data-q="basso">Basso</span><span data-q="medio">Medio</span><span data-q="alto">Alto</span></div>
   <p id="stats"></p>
   <p class="help" id="help"></p>
+  <button id="credBtn" class="small">Crediti</button>
 </div>
-<div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button></div>
+<div id="sel" class="hidden">
+  <div id="selTop"><button id="selBack">‹ Indietro</button><h2>SCEGLI IL TUO EROE</h2></div>
+  <div id="hInfo"><small id="hR"></small><h3 id="hN"></h3><p id="hD"></p>
+    <div class="st"><span>Salute</span><div class="sb"><i id="hH"></i></div><b id="hHt"></b></div>
+    <div class="st"><span>Velocità</span><div class="sb"><i id="hS"></i></div><b id="hSt"></b></div>
+    <div class="st"><span>Arma iniziale</span><b id="hW"></b></div>
+    <div class="st"><b id="hSp" style="text-align:left;color:#ffd23f"></b></div>
+    <button id="go">GIOCA</button></div>
+  <div id="cards"><div class="hcard" data-h="0"><b></b><small></small></div><div class="hcard" data-h="1"><b></b><small></small></div><div class="hcard" data-h="2"><b></b><small></small></div></div>
+</div>
+<div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button><button id="share" class="small">📣 Sfida un amico</button></div>
+<div id="cred" class="screen hidden"><h2>Crediti</h2><div class="credl">
+<p>Personaggi, pini e rocce: <b>Quaternius</b> (CC0), via <a href="https://poly.pizza/u/Quaternius" target="_blank" rel="noopener">Poly Pizza</a></p>
+<p>Modello di Nonna Rocca: <a href="https://poly.pizza/m/oAArCNHjFB" target="_blank" rel="noopener">"Soldier" by Quaternius, via Poly Pizza</a> — <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a> (colori modificati)</p>
+<p>Texture PBR: <a href="https://ambientcg.com" target="_blank" rel="noopener">ambientCG</a> (CC0) · Cielo HDRI: <a href="https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky" target="_blank" rel="noopener">Poly Haven</a> (CC0)</p>
+<p>Motore 3D: <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> (MIT)</p></div>
+<button id="credClose">Chiudi</button></div>
 <div id="rotate"><div class="phone"></div><h2>Ruota il telefono</h2><p>ISOLA ZERO si gioca in orizzontale</p><button id="fs">Schermo intero</button></div>
-<script type="module" src="main.js?v=2"></script>
+<script type="module" src="main.js?v=4"></script>
 </body></html>
