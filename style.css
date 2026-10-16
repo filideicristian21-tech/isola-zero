@@ -1,0 +1,45 @@
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;touch-action:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;background:radial-gradient(circle at 50% 30%,rgba(120,60,220,.55),rgba(20,8,50,.92));z-index:20}
+.screen h1{font-size:clamp(44px,12vw,96px);margin:0;letter-spacing:2px;font-weight:900;background:linear-gradient(#fff36b,#ff8a00);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 6px 0 rgba(0,0,0,.25);font-style:italic}
+.sub{font-size:17px;opacity:.9;max-width:520px}
+.screen button{margin-top:18px;font-size:28px;font-weight:900;padding:16px 56px;border:0;border-radius:14px;background:linear-gradient(#ffe14d,#ffae00);color:#3a1b00;box-shadow:0 6px 0 #a35b00;cursor:pointer;font-style:italic}
+#stats{opacity:.85;font-size:15px}.help{font-size:13px;opacity:.7;max-width:560px}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+#map{position:absolute;top:10px;left:10px;width:118px;height:118px;border:3px solid rgba(255,255,255,.8);border-radius:10px;background:#1b6fa8}
+#top{position:absolute;top:12px;right:12px;display:flex;gap:8px;font-weight:800;font-size:15px;flex-wrap:wrap;justify-content:flex-end;max-width:60vw}
+#top span{background:rgba(0,0,0,.45);padding:5px 10px;border-radius:8px}
+#feed{position:absolute;top:48px;right:12px;text-align:right;font-size:13px;font-weight:700}
+#feed div{background:rgba(0,0,0,.4);margin-top:3px;padding:3px 8px;border-radius:6px}
+#msg{position:absolute;top:22%;width:100%;text-align:center;font-size:20px;font-weight:900;text-shadow:0 2px 4px #000}
+#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px;font-weight:300;text-shadow:0 0 3px #000}
+#cross.hit{color:#ff4040;transform:translate(-50%,-50%) scale(1.5) rotate(45deg)}
+#bars{position:absolute;left:12px;bottom:14px;width:min(220px,40vw)}
+.bar{position:relative;height:16px;background:rgba(0,0,0,.5);border-radius:5px;margin-top:4px;overflow:hidden}
+.bar div{height:100%;width:0}#shb{background:#3aa8ff}#hpb{background:#4ee36b}
+.bar span{position:absolute;left:6px;top:0;font-size:12px;font-weight:800;line-height:16px}
+#mats{position:absolute;left:12px;bottom:56px;font-weight:800;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:8px}
+#buildinfo{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);font-weight:800;color:#ffe14d;text-shadow:0 2px 3px #000}
+#slots{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:auto}
+.slot{width:58px;height:58px;border-radius:9px;background:rgba(0,0,0,.5);border:3px solid #666;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-style:normal}
+.slot i{font-style:normal}.slot small{font-size:9px;font-weight:700;white-space:nowrap}
+.slot.sel{transform:translateY(-6px);box-shadow:0 0 0 2px #fff}
+#ammo{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);font-weight:900;font-size:18px;text-shadow:0 2px 3px #000;white-space:nowrap}
+#hurt{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 40px rgba(255,0,0,.8);opacity:0;z-index:4;transition:opacity .25s}
+#stormfx{position:fixed;inset:0;pointer-events:none;background:rgba(140,40,220,.3);opacity:0;z-index:3;transition:opacity .4s}
+#touch{display:none}
+body.touch #touch{display:block}
+#joy{position:absolute;left:30px;bottom:110px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3)}
+#knob{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.5)}
+#touch button{position:absolute;pointer-events:auto;border:2px solid rgba(255,255,255,.5);background:rgba(0,0,0,.35);color:#fff;border-radius:50%;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none}
+#touch button small{font-size:8px;font-weight:800}
+#bFire{right:24px;bottom:120px;width:84px;height:84px;background:rgba(255,60,60,.4)!important}
+#bJump{right:118px;bottom:96px;width:62px;height:62px}
+#bBuild{right:24px;bottom:216px;width:62px;height:62px}
+#bEdit{right:96px;bottom:176px;width:56px;height:56px}
+#bReload{right:180px;bottom:150px;width:52px;height:52px}
+body.touch #bars{bottom:auto;top:136px}body.touch #mats{bottom:auto;top:182px}
+body.touch #slots{bottom:8px}
+body.touch #feed{top:92px}body.touch #top{font-size:13px}

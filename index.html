@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2b1055">
+<link rel="icon" href="data:,">
+<title>ISOLA ZERO – Battle Royale 3D</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<canvas id="c"></canvas>
+<div id="hurt"></div><div id="stormfx"></div>
+<div id="hud" class="hidden">
+  <canvas id="map" width="128" height="128"></canvas>
+  <div id="top"><span id="alive">👤 16</span><span id="kills">💀 0</span><span id="stormtxt"></span></div>
+  <div id="feed"></div>
+  <div id="msg"></div>
+  <div id="cross">+</div>
+  <div id="bars"><div class="bar"><div id="shb"></div><span id="sht">0</span></div><div class="bar"><div id="hpb"></div><span id="hpt">100</span></div></div>
+  <div id="mats">🪵 <b id="matn">0</b></div>
+  <div id="buildinfo"></div>
+  <div id="slots"><div class="slot" data-s="-1">⛏️<small>Piccone</small></div><div class="slot" data-s="0"><i>🔫</i><small>vuoto</small></div><div class="slot" data-s="1"><i>🔫</i><small>vuoto</small></div><div class="slot" data-s="2"><i>🔫</i><small>vuoto</small></div></div>
+  <div id="ammo"></div>
+  <div id="touch">
+    <div id="joy"><div id="knob"></div></div>
+    <button id="bFire">🎯<small>SPARA</small></button>
+    <button id="bJump">⤒<small>SALTA</small></button>
+    <button id="bBuild">🧱<small>COSTRUISCI</small></button>
+    <button id="bEdit">🔄<small>MODIFICA</small></button>
+    <button id="bReload">↻<small>RICARICA</small></button>
+  </div>
+</div>
+<div id="menu" class="screen">
+  <h1>ISOLA ZERO</h1>
+  <p class="sub">Lanciati dal bus volante. Raccogli, costruisci, sopravvivi.<br>Sedici giocatori, un'isola, un solo vincitore.</p>
+  <button id="play">GIOCA</button>
+  <p id="stats"></p>
+  <p class="help" id="help"></p>
+</div>
+<div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button></div>
+<script type="module" src="main.js"></script>
+</body></html>
