@@ -16,3 +16,5 @@
 | three.module.min.js, jsm/ | three.js r160 | three.js authors | https://github.com/mrdoob/three.js | MIT |
 
 Texture ambientCG ricompresse (colore 1024px, normal/roughness 512px).
+
+- PeerJS 1.5.5 (MIT), https://peerjs.com — libreria di rete inclusa in peerjs.min.js

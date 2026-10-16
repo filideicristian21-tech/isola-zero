@@ -102,3 +102,28 @@ body.touch #bReload{right:max(176px,calc(env(safe-area-inset-right) + 164px));bo
 body.touch #bSuper{display:flex;right:max(20px,calc(env(safe-area-inset-right) + 8px));bottom:178px;width:50px;height:50px;border-color:#ffd23f!important}
 body.touch #bCover{display:flex;right:max(250px,calc(env(safe-area-inset-right) + 238px));bottom:40px;width:46px;height:46px}
 #touch button.cd{opacity:.45}
+/* multigiocatore */
+.screen button.mp{font-size:20px;padding:10px 34px;background:linear-gradient(#7ee0ff,#2aa8ff);color:#002a44;box-shadow:0 5px 0 #0a5c99,0 10px 30px rgba(0,0,0,.5)}
+#lobby{justify-content:flex-start;overflow-y:auto;background:rgba(5,12,28,.94);gap:2px}
+#lobby h2{margin:4px 0;color:#fff;font-size:24px}
+#lbCode{font-size:30px;font-weight:900;letter-spacing:6px;color:#ffe14d}
+#lbStatus{color:#dfe8f5;margin:4px 0;font-size:15px;max-width:560px}
+#lbInvite{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+#lbInvite button{margin-top:4px}
+#lbWa{background:linear-gradient(#5ff08a,#25d366)!important;color:#05310f!important;box-shadow:0 5px 0 #128c3e!important;font-size:22px!important;padding:12px 30px!important}
+.lbl{color:#fff;font-weight:700;margin-top:8px}
+#lbNick{font-size:18px;padding:8px 12px;border-radius:10px;border:2px solid #ffe14d;background:#0d1b2a;color:#fff;width:200px;margin-left:6px}
+#lbHeroes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+#lbHeroes button{font-size:13px;padding:8px 12px;margin-top:4px;background:#22324a;color:#fff;box-shadow:none;font-style:normal;border:2px solid transparent}
+#lbHeroes button.on{border-color:#ffe14d;background:#3a4f70}
+#lbList{list-style:none;padding:0;margin:8px 0;min-width:280px;text-align:left}
+#lbList li{background:rgba(255,255,255,.08);border-radius:10px;padding:7px 12px;margin:4px 0;color:#fff}
+#lbList li small{color:#9fb3cc;margin-left:6px}
+#lbList li.empty{color:#9fb3cc;font-style:italic;background:none;font-size:13px}
+#lbList .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+#names{position:fixed;inset:0;pointer-events:none;z-index:4}
+#names .nm{position:absolute;transform:translate(-50%,-100%);color:#fff;font-weight:800;font-size:13px;padding:2px 7px;border-radius:7px;background:rgba(0,0,0,.5);border:1px solid rgba(126,224,255,.8);white-space:nowrap}
+#friends{position:absolute;left:8px;top:150px;font-size:12px;color:#fff;pointer-events:none;text-shadow:0 1px 2px #000}
+#friends div{background:rgba(0,0,0,.35);border-radius:6px;padding:2px 7px;margin-bottom:3px}
+#friends div.dead{opacity:.55}
+#friends small{color:#bcd}

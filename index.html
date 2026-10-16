@@ -5,12 +5,14 @@
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:,">
 <title>ISOLA ZERO – Battle Royale 3D</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 <script type="importmap">{"imports":{"three":"./three.module.min.js","three/addons/":"./jsm/"}}</script>
 </head><body>
 <canvas id="c"></canvas>
 <div id="hurt"></div><div id="stormfx"></div>
+<div id="names"></div>
 <div id="hud" class="hidden">
+  <div id="friends" class="hidden"></div>
   <canvas id="map" width="128" height="128"></canvas>
   <div id="top"><span id="alive">👤 16</span><span id="kills">💀 0</span><span id="stormtxt"></span></div>
   <div id="feed"></div>
@@ -38,7 +40,8 @@
   <h1>ISOLA ZERO</h1>
   <p class="sub">Un'isola. Cento strade. Zero seconde possibilità.</p>
   <p id="chal"></p>
-  <button id="play">GIOCA</button>
+  <button id="play">Gioca da solo</button>
+  <button id="mpBtn" class="mp">👥 Crea partita con amici</button>
   <div id="qual">Grafica: <span data-q="basso">Basso</span><span data-q="medio">Medio</span><span data-q="alto">Alto</span></div>
   <p id="stats"></p>
   <p class="help" id="help"></p>
@@ -54,13 +57,27 @@
     <button id="go">GIOCA</button></div>
   <div id="cards"><div class="hcard" data-h="0"><b></b><small></small></div><div class="hcard" data-h="1"><b></b><small></small></div><div class="hcard" data-h="2"><b></b><small></small></div></div>
 </div>
+<div id="lobby" class="screen hidden">
+  <h2>👥 Partita con amici</h2>
+  <div id="lbCode"></div>
+  <p id="lbStatus">Connessione…</p>
+  <div id="lbInvite"><button id="lbWa">💬 Invita su WhatsApp</button><button id="lbCopy" class="small">🔗 Copia link</button><button id="lbShare" class="small">📤 Condividi</button></div>
+  <label class="lbl">Il tuo nome <input id="lbNick" maxlength="14" placeholder="Scrivi il tuo nome" autocomplete="off"></label>
+  <div id="lbHeroes"><button data-h="0"></button><button data-h="1"></button><button data-h="2"></button></div>
+  <ul id="lbList"></ul>
+  <button id="lbStart" style="display:none">INIZIA</button>
+  <button id="lbNew" class="small" style="display:none">Crea la mia partita</button>
+  <button id="lbLeave" class="small">Esci</button>
+</div>
 <div id="end" class="screen hidden"><h1 id="endT"></h1><p id="endS"></p><button id="again">GIOCA ANCORA</button><button id="share" class="small">📣 Sfida un amico</button></div>
 <div id="cred" class="screen hidden"><h2>Crediti</h2><div class="credl">
 <p>Personaggi, pini e rocce: <b>Quaternius</b> (CC0), via <a href="https://poly.pizza/u/Quaternius" target="_blank" rel="noopener">Poly Pizza</a></p>
 <p>Modello di Nonna Rocca: <a href="https://poly.pizza/m/oAArCNHjFB" target="_blank" rel="noopener">"Soldier" by Quaternius, via Poly Pizza</a> — <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a> (colori modificati)</p>
 <p>Texture PBR: <a href="https://ambientcg.com" target="_blank" rel="noopener">ambientCG</a> (CC0) · Cielo HDRI: <a href="https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky" target="_blank" rel="noopener">Poly Haven</a> (CC0)</p>
+<p>Rete: <a href="https://peerjs.com" target="_blank" rel="noopener">PeerJS</a> (MIT)</p>
 <p>Motore 3D: <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> (MIT)</p></div>
 <button id="credClose">Chiudi</button></div>
 <div id="rotate"><div class="phone"></div><h2>Ruota il telefono</h2><p>ISOLA ZERO si gioca in orizzontale</p><button id="fs">Schermo intero</button></div>
-<script type="module" src="main.js?v=4"></script>
+<script src="peerjs.min.js?v=1.5.5"></script>
+<script type="module" src="main.js?v=5"></script>
 </body></html>
