@@ -163,3 +163,4 @@ body.rotOff #rotate{display:none!important}
 #tutIntro,#tut,#tutDone{z-index:35}#tutSkip{position:fixed!important;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));margin:0!important;min-height:44px;z-index:60}
 #tut .box,#tutIntro .box,#tutDone .box{text-align:center}#tutP{font-size:17px}
 #menu{justify-content:flex-start;overflow-y:auto}#menu>h1{margin-top:auto}#menu>#offBadge+*, #menu>:last-child{margin-bottom:auto}
+#poitxt:empty{display:none}

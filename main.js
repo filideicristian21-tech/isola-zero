@@ -490,14 +490,18 @@ for (let i = 0; i < 15; i++) {
   b.ai = { t: 0, goal: null, enemy: null, aim: 0, buildCd: 0, lastHit: -9, strafe: rnd() < .5 ? 1 : -1, skill: rr(.6, 1.2), stuckT: 0, last: new V3(), drop: rr(2.5, 17), land: null };
 }
 
-// ---------- bus ----------
+// ---------- Dirigibile Zero (aeronave cargo) ----------
 const bus = new THREE.Group();
 {
-  const b = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.2, 9), lam(0x3a86ff)); b.position.y = 0; bus.add(b);
-  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.5, .6, 9.1), lam(0xffffff)); stripe.position.y = .4; bus.add(stripe);
-  const bal = new THREE.Mesh(new THREE.SphereGeometry(4.5, 10, 8), lam(0xff4d6d)); bal.position.y = 7; bal.scale.set(1, 1.1, 1.4); bus.add(bal);
-  for (const s of [-1, 1]) for (const f of [-1, 1]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 4), lam(0x333333)); r.position.set(s * 1.5, 3.2, f * 3.5); bus.add(r); }
-  for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.8, .8, .5, 8), lam(0x222222)); w.rotation.z = Math.PI / 2; w.position.set(s * 1.8, -1.6, 2.8); bus.add(w); const w2 = w.clone(); w2.position.z = -2.8; bus.add(w2); }
+  const hullM = std(0xb8b2a2, .7), finM = std(0x7a2f22, .6), gondM = std(0x4a4f55, .55, .5), winM = std(0x9fc3d6, .1, .3, { emissive: 0x223344 }), ropeM = std(0x2a2a2a, .9);
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(4, 24, 16), hullM); hull.scale.set(1, 1, 3.2); hull.position.y = 6; bus.add(hull);
+  for (const z of [-6, 0, 6]) { const r = new THREE.Mesh(new THREE.TorusGeometry(3.9 * Math.sqrt(1 - (z / 12.8) ** 2), .08, 6, 32), finM); r.position.set(0, 6, z); bus.add(r); }
+  for (const [rx, rz] of [[0, 0], [0, Math.PI / 2], [0, Math.PI], [0, -Math.PI / 2]]) { const f = new THREE.Mesh(new THREE.BoxGeometry(.25, 3.2, 3), finM); f.position.set(0, 6, -11.5); f.rotation.z = rz; f.translateY(2.2); bus.add(f); }
+  const g = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.2, 8), gondM); g.position.y = .4; bus.add(g);
+  for (const s of [-1, 1]) for (let k = -2; k <= 2; k++) { const w = new THREE.Mesh(new THREE.BoxGeometry(.05, .6, .9), winM); w.position.set(s * 1.42, .8, k * 1.4); bus.add(w); }
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(2, 1.4, 2), pbr('wood', 0xb08a5a, 1, 1)); crate.position.set(0, -1.6, 0); bus.add(crate);
+  for (const s of [-1, 1]) for (const f of [-1, 1]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 3.4), ropeM); r.position.set(s * 1.2, 2.9, f * 3); bus.add(r); }
+  for (const s of [-1, 1]) { const pr = new THREE.Mesh(new THREE.BoxGeometry(.15, 2.4, .2), gondM); pr.position.set(s * 2, .4, -4.3); bus.add(pr); }
 }
 bus.traverse(o => { if (o.isMesh) o.castShadow = true; });
 scene.add(bus);
@@ -1030,7 +1034,7 @@ function startGame() {
   for (const b of ents) if (!b.isPlayer) { const along = (b.ai.drop / BUSDUR) * 640 - 320; const x = busDir.x * along, z = busDir.z * along; b.ai.land = rnd() < .5 && houses.length ? (() => { const h = houses[(rnd() * houses.length) | 0]; return new V3(h.x + rr(-8, 8), 0, h.z + rr(-8, 8)); })() : randomLand(x, z, 45); }
   for (const b of ents) if (!b.isPlayer && !b.human) { b.ai.skill = rr(DF.sk[0], DF.sk[1]); b.maxHp = Math.round(HEROES[b.hero].hp * DF.hp); b.hp = b.maxHp; b.sh = DF.sh; }
   nextCircle();
-  say(isTouch ? 'Sei sul bus volante! Tocca SALTA per lanciarti' : 'Sei sul bus volante! Premi SPAZIO per lanciarti', 5);
+  say(isTouch ? 'A bordo del Dirigibile Zero! Tocca SALTA per lanciarti' : 'A bordo del Dirigibile Zero! Premi SPAZIO per lanciarti', 5);
 }
 function endGame(win, place) {
   if (phase === 'end') return; phase = 'end';
